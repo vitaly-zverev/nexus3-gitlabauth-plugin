@@ -42,7 +42,7 @@ public class GitlabAuthenticatingRealm extends AuthorizingRealm {
     @Override
     protected void onInit() {
         super.onInit();
-        LOGGER.info("Keycloak Realm initialized...");
+        LOGGER.info("Gitlab Realm initialized...");
     }
 
     @Override

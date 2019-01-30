@@ -84,13 +84,14 @@ public class GitlabApiClient {
             throw new GitlabAuthenticationException(e);
         }
 
-        if (gitlabUser==null || !loginName.equals(gitlabUser.getEmail())) {
-            throw new GitlabAuthenticationException("Given username not found or does not match Github Username!");
+        if (gitlabUser==null || !loginName.equals(gitlabUser.getUsername())) {
+            throw new GitlabAuthenticationException("Given username not found or does not match Gitlab Username!");
         }
 
         GitlabPrincipal principal = new GitlabPrincipal();
 
-        principal.setUsername(gitlabUser.getEmail());
+        principal.setUsername(gitlabUser.getUsername());
+        principal.setEmail(gitlabUser.getEmail());
         principal.setGroups(getGroups((gitlabUser.getUsername())));
 
         return principal;
