@@ -23,11 +23,15 @@ public class GitlabAuthConfiguration {
 
     private static final String DEFAULT_GITLAB_URL = "https://gitlab.com";
 
+    private static final String DEFAULT_IGNORE_CERTIFICATE_ERRORS = "false";
+    
     private static final String GITLAB_API_URL_KEY = "gitlab.api.url";
+    
+    private static final String GITLAB_IGNORE_CERTIFICATE_ERRORS = "gitlab.api.certificate.ignore_errors";
 
     private static final String GITLAB_SUDO_API_KEY_KEY = "gitlab.api.key";
 
-    private static final String GITLAB_PRINCIPAL_CACHE_TTL_KEY = "github.principal.cache.ttl";
+    private static final String GITLAB_PRINCIPAL_CACHE_TTL_KEY = "gitlab.principal.cache.ttl";
     
     private static final Logger LOGGER = LoggerFactory.getLogger(GitlabAuthConfiguration.class);
 
@@ -40,7 +44,7 @@ public class GitlabAuthConfiguration {
         try {
             configuration.load(Files.newInputStream(Paths.get(".", "etc", CONFIG_FILE)));
         } catch (IOException e) {
-            LOGGER.warn("Error reading github oauth properties, falling back to default configuration", e);
+            LOGGER.warn("Error reading gitlab oauth properties, falling back to default configuration", e);
         }
     }
 
@@ -50,6 +54,10 @@ public class GitlabAuthConfiguration {
 
     public String getGitlabApiKey() {
         return configuration.getProperty(GITLAB_SUDO_API_KEY_KEY);
+    }
+
+    public Boolean getGitlabIgnoreCertificateErrors() {
+        return configuration.getProperty(GITLAB_IGNORE_CERTIFICATE_ERRORS, DEFAULT_IGNORE_CERTIFICATE_ERRORS).equals("true");
     }
 
     public Duration getPrincipalCacheTtl() {

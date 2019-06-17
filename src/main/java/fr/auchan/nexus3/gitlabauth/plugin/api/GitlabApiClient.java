@@ -50,6 +50,7 @@ public class GitlabApiClient {
     @PostConstruct
     public void init() {
         client = GitlabAPI.connect(configuration.getGitlabApiUrl(), configuration.getGitlabApiKey());
+        client.ignoreCertificateErrors(configuration.getGitlabIgnoreCertificateErrors());
         initPrincipalCache();
     }
 
@@ -84,8 +85,12 @@ public class GitlabApiClient {
             throw new GitlabAuthenticationException(e);
         }
 
-        if (gitlabUser==null || !loginName.equals(gitlabUser.getUsername())) {
-            throw new GitlabAuthenticationException("Given username not found or does not match Gitlab Username!");
+        if (gitlabUser == null) {
+            throw new GitlabAuthenticationException("Given username not found!");
+        }
+
+        if ( ! loginName.equals(gitlabUser.getUsername()) && ! loginName.equals(gitlabUser.getEmail())) {
+            throw new GitlabAuthenticationException("Given username does not match GitLab username or email!");
         }
 
         GitlabPrincipal principal = new GitlabPrincipal();
