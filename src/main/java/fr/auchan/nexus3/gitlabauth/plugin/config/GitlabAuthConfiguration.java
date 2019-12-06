@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Named;
 
 import org.slf4j.Logger;
@@ -37,8 +36,7 @@ public class GitlabAuthConfiguration {
 
     private Properties configuration;
 
-    @PostConstruct
-    public void init() {
+    public GitlabAuthConfiguration() {
         configuration = new Properties();
 
         try {

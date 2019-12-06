@@ -1,22 +1,17 @@
 package fr.auchan.nexus3.gitlabauth.plugin;
 
-import java.io.Serializable;
 import java.util.Set;
 
-public class GitlabPrincipal implements Serializable {
-    private String username;
-    private String email;
-    private Set<String> groups;
+public class GitlabPrincipal {
+    private final String username;
+    private final String email;
+    private final Set<String> groups;
+    private final String password;
 
-    public void setUsername(String username) {
+    public GitlabPrincipal(String username, String password, String email, Set<String> groups) {
         this.username = username;
-    }
-
-     public void setEmail(String email) {
+        this.password = password;
         this.email = email;
-    }
-
-    public void setGroups(Set<String> groups) {
         this.groups = groups;
     }
 
@@ -30,6 +25,10 @@ public class GitlabPrincipal implements Serializable {
 
     public Set<String> getGroups() {
         return groups;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override

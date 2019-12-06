@@ -1,12 +1,10 @@
 package fr.auchan.nexus3.gitlabauth.plugin;
 
 import fr.auchan.nexus3.gitlabauth.plugin.api.GitlabApiClient;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.authc.pam.UnsupportedTokenException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -14,11 +12,15 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.eclipse.sisu.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.nexus.security.user.User;
+import org.sonatype.nexus.security.user.UserManager;
+import org.sonatype.nexus.security.user.UserStatus;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.stream.Collectors;
+
+import java.util.Collections;
 
 @Singleton
 @Named
@@ -26,62 +28,56 @@ import java.util.stream.Collectors;
 public class GitlabAuthenticatingRealm extends AuthorizingRealm {
     private GitlabApiClient gitlabClient;
 
-    public static final String NAME = GitlabAuthenticatingRealm.class.getName();
     private static final Logger LOGGER = LoggerFactory.getLogger(GitlabAuthenticatingRealm.class);
 
+    private UserManager userManager;
+
     @Inject
-    public GitlabAuthenticatingRealm(final GitlabApiClient gitlabClient) {
+    public GitlabAuthenticatingRealm(final GitlabApiClient gitlabClient, final UserManager userManager) {
         this.gitlabClient = gitlabClient;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-    protected void onInit() {
-        super.onInit();
-        LOGGER.info("Gitlab Realm initialized...");
+        this.userManager = userManager;
     }
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        GitlabPrincipal principal = (GitlabPrincipal) principals.getPrimaryPrincipal();
-        LOGGER.info("doGetAuthorizationInfo for user {} with roles {}", principal.getUsername(), principal.getGroups().stream().collect(Collectors.joining()));
-        return new SimpleAuthorizationInfo(principal.getGroups());
+        AuthorizationInfo info = null;
+        Object principal = principals.getPrimaryPrincipal();
+        if (principal instanceof GitlabPrincipal) {
+            GitlabPrincipal gitlabPrincipal = (GitlabPrincipal) principal;
+            LOGGER.info("doGetAuthorizationInfo for user {} with roles {}", gitlabPrincipal.getUsername(), gitlabPrincipal.getGroups());
+            info = new SimpleAuthorizationInfo(gitlabPrincipal.getGroups());
+        }
+        return info;
     }
 
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        if (!(token instanceof UsernamePasswordToken)) {
-            throw new UnsupportedTokenException(String.format("Token of type %s  is not supported. A %s is required.",
-                    token.getClass().getName(), UsernamePasswordToken.class.getName()));
-        }
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) {
+        AuthenticationInfo info = null;
+        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+        String username = token.getUsername();
+        String password = String.valueOf((char[])token.getCredentials());
+        LOGGER.info("doGetAuthenticationInfo for {}", username);
 
-        UsernamePasswordToken t = (UsernamePasswordToken) token;
-        LOGGER.info("doGetAuthenticationInfo for {}", ((UsernamePasswordToken) token).getUsername());
-
-        GitlabPrincipal authenticatedPrincipal;
         try {
-            authenticatedPrincipal = gitlabClient.authz(t.getUsername(), t.getPassword());
-            LOGGER.info("Successfully authenticated {}",t.getUsername());
+            GitlabPrincipal principal = gitlabClient.authz(username, password);
+            createUserIfNecessary(principal);
+            info = new SimpleAuthenticationInfo(principal, password, getName());
+            LOGGER.info("Successfully authenticated {}", username);
         } catch (GitlabAuthenticationException e) {
             LOGGER.warn("Failed authentication", e);
-            return null;
         }
-
-        return createSimpleAuthInfo(authenticatedPrincipal, t);
+        return info;
     }
-
-    /**
-     * Creates the simple auth info.
-     *
-     * @param token
-     *         the token
-     * @return the simple authentication info
-     */
-    private SimpleAuthenticationInfo createSimpleAuthInfo(GitlabPrincipal principal, UsernamePasswordToken token) {
-        return new SimpleAuthenticationInfo(principal, token.getCredentials(), NAME);
+    
+    private void createUserIfNecessary(GitlabPrincipal principal) {
+        String username = principal.getUsername();
+        if (!userManager.listUserIds().contains(username)) {
+            User user = new User();
+            user.setUserId(username);
+            user.setStatus(UserStatus.active);
+            user.setEmailAddress(principal.getEmail());
+            user.setRoles(Collections.emptySet());
+            userManager.addUser(user, principal.getPassword());
+        }
     }
 }

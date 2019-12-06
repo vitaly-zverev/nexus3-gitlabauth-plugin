@@ -1,9 +1,9 @@
-FROM sonatype/nexus3:3.16.2
+FROM sonatype/nexus3:3.19.1
 
 # Before docker  build
 # do "mvn  clean package -Dmaven.javadoc.skip=true" to build the plugin jar
 
-ENV RELEASE_TAG=1.1.2
+ENV RELEASE_TAG=1.2.0-SNAPSHOT
 USER root
 RUN mkdir -p /opt/sonatype/nexus/system/fr/auchan/nexus3-gitlabauth-plugin/${RELEASE_TAG}/
 COPY target/nexus3-gitlabauth-plugin-${RELEASE_TAG}.jar /opt/sonatype/nexus/system/fr/auchan/nexus3-gitlabauth-plugin/${RELEASE_TAG}/
