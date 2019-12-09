@@ -1,0 +1,15 @@
+version: '3'
+services:
+   nexus:
+    image: nexus3-gitlabauth
+    build:
+      # Before docker-compose build
+      # do "mvn  clean package -Dmaven.javadoc.skip=true" to build the plugin jar
+      context: .
+    ports:
+      - 8081:8081
+    volumes:
+      # get a copy of gitlabauth.properties 
+      # from vault://secret/projects/som-irt-services/nexus/stage/gitlabauth.properties
+      # for testing
+      - ${HOME}/etc/gitlabauth.properties:/opt/sonatype/nexus/etc/gitlabauth.properties
