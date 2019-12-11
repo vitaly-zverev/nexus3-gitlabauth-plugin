@@ -74,6 +74,8 @@ public class GitlabAuthenticatingRealm extends AuthorizingRealm {
         if (!userManager.listUserIds().contains(username)) {
             User user = new User();
             user.setUserId(username);
+            user.setFirstName(username);
+            user.setLastName(username);
             user.setStatus(UserStatus.active);
             user.setEmailAddress(principal.getEmail());
             user.setRoles(Collections.emptySet());
