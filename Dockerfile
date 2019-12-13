@@ -1,4 +1,4 @@
-FROM sonatype/nexus3:3.19.1
+FROM sonatype/nexus3:3.20.0
 
 # Before docker  build
 # do "mvn  clean package -Dmaven.javadoc.skip=true" to build the plugin jar
