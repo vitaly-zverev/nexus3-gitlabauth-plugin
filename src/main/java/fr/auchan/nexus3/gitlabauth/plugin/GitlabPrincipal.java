@@ -1,8 +1,12 @@
 package fr.auchan.nexus3.gitlabauth.plugin;
 
+import java.io.Serializable;
 import java.util.Set;
 
-public class GitlabPrincipal {
+public class GitlabPrincipal implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private final String username;
     private final String email;
     private final Set<String> groups;
